@@ -1,16 +1,12 @@
 package com.qurenie.relics_thirteenflames.content.entities;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ThrowableProjectile;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -18,15 +14,21 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 public class KnefProjCarrier extends ThrowableProjectile
 {
 
+    private static final EntityDataAccessor<String> OWNER_UUID = SynchedEntityData.defineId(KnefProjCarrier.class, EntityDataSerializers.STRING);
+
+    public void setOwnerUUID(String uuid){
+        this.getEntityData().set(OWNER_UUID, uuid);
+    }
+
+    public String getOwnerUUID() {
+        return this.getEntityData().get(OWNER_UUID);
+    }
 
     public List<KnefProjectile> rays = new ArrayList<>();
 
@@ -44,7 +46,19 @@ public class KnefProjCarrier extends ThrowableProjectile
 
     @Override
     protected void defineSynchedData() {
+        this.entityData.define(OWNER_UUID, "");
+    }
 
+    @Override
+    protected void readAdditionalSaveData(CompoundTag compound) {
+        super.readAdditionalSaveData(compound);
+        setOwnerUUID(compound.getString("owneruuid"));
+    }
+
+    @Override
+    protected void addAdditionalSaveData(CompoundTag compound) {
+        super.addAdditionalSaveData(compound);
+        compound.putString("owneruuid", getOwnerUUID());
     }
 
     @Override
@@ -53,8 +67,8 @@ public class KnefProjCarrier extends ThrowableProjectile
         super.tick();
 
         setDeltaMovement(motion);
-//        if(!this.getLevel().isClientSide()){
-//            ServerLevel slevel = (ServerLevel) this.getLevel();
+//        if(!this.level().isClientSide()){
+//            ServerLevel slevel = (ServerLevel) this.level();
 //            slevel.sendParticles(new CircleTintData(new Color(0, 51, 255), 0.2f, 20, 0.95f, false, false), this.getX(), this.getY(), this.getZ(), 1, 0, 0, 0, 0);
 //        }
 
@@ -82,35 +96,36 @@ public class KnefProjCarrier extends ThrowableProjectile
             rays.get(i).setPos(pos);
         }
 
-        if(!this.getLevel().isClientSide() /*&& this.tickCount > 8*/) {
+        if(!this.level().isClientSide() ) {
 
             AABB box = this.getBoundingBox().inflate(7);
 
-            List<LivingEntity> targets = new ArrayList<>(this.getLevel().getEntitiesOfClass(LivingEntity.class, box, e -> !(e.equals(this.getOwner()) || e instanceof LocalPlayer) && e.hasLineOfSight(this)));
+            List<LivingEntity> targets = new ArrayList<>(this.level().getEntitiesOfClass(LivingEntity.class, box, e -> !(e.getStringUUID().equals(this.getOwnerUUID()) ) && e.hasLineOfSight(this)));
 
             if (!targets.isEmpty()) {
-                for (LivingEntity target : this.getLevel().getEntitiesOfClass(LivingEntity.class, box.move(motion.scale(20)).inflate(1), e -> !(e.equals(this.getOwner()) || e instanceof LocalPlayer)  && e.hasLineOfSight(this))) {
+                for (LivingEntity target : this.level().getEntitiesOfClass(LivingEntity.class, box.move(motion.scale(20)).inflate(1), e -> !(e.getStringUUID().equals(this.getOwnerUUID()))  && e.hasLineOfSight(this))) {
                     if (!targets.contains(target)) targets.add(target);
                 }
-//                for (LivingEntity target : this.getLevel().getEntitiesOfClass(LivingEntity.class, box.move(motion.scale(20)), e -> !(e.equals(owner) || e instanceof LocalPlayer))) {
-//                    if (!targets.contains(target)) targets.add(target);
-//                }
 
                 int cap = rays.size() / targets.size();
                 if (cap == 0) {
                     for (int i = 0; i < rays.size(); i++) {
                         rays.get(i).target = targets.get(i);
+                        rays.get(i).setFree(true);
                     }
                     rays.clear();
                     this.discard();
                 } else {
                     for (LivingEntity target : targets) {
                         for (int i = 0; i < cap; i++) {
-                            rays.remove(0).target = target;
+                            KnefProjectile proj = rays.remove(0);
+                            proj.target = target;
+                            proj.setFree(true);
                         }
                     }
                     for (int i = 0; i < rays.size(); i++) {
                         rays.get(i).target = targets.get(i);
+                        rays.get(i).setFree(true);
                     }
                     rays.clear();
                     this.discard();

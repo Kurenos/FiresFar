@@ -8,8 +8,13 @@
     "maxShiftBy": 5
   },
   "mixins": [
-    "client.BakedOverrideAccessor",
-    "GameRendererMixin"
+    "GameRendererMixin",
+    "LivingEntityMixin",
+    "LivingEntityRendererMixin",
+    "LocalPlayerMixin",
+    "ParticleAccessor",
+    "PlayerMixin",
+    "client.BakedOverrideAccessor"
   ],
   "client": [
   ],

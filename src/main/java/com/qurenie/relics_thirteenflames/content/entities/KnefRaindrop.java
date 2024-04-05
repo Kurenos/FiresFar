@@ -2,18 +2,16 @@ package com.qurenie.relics_thirteenflames.content.entities;
 
 import com.qurenie.relics_thirteenflames.init.SoundsRegistry;
 import com.qurenie.relics_thirteenflames.util.ParticleHelper;
-import it.hurts.sskirillss.relics.client.particles.circle.CircleTintData;
-import it.hurts.sskirillss.relics.items.relics.base.utils.LevelingUtils;
+import it.hurts.sskirillss.relics.items.relics.base.IRelicItem;
+import it.hurts.sskirillss.relics.utils.ParticleUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ThrowableProjectile;
 import net.minecraft.world.item.ItemStack;
@@ -24,8 +22,6 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class KnefRaindrop extends ThrowableProjectile
 {
@@ -87,9 +83,9 @@ public class KnefRaindrop extends ThrowableProjectile
         super.tick();
 
         setDeltaMovement(movement);
-        if(level.isClientSide) {
+        if(level().isClientSide) {
             double distance = this.position().subtract(prevPos == null ? this.position() : prevPos).length();
-            ParticleHelper.spawnParticleLine(this.level, new CircleTintData(color, 0.1f, 80, 0.85f, false),
+            ParticleHelper.spawnParticleLine(this.level(), ParticleUtils.constructSimpleSpark(color, 0.1f, 80, 0.85f),
                     prevPos == null ? this.position() : prevPos, this.position(), (int) Math.round(distance * this.tickCount * this.tickCount / 156 + 2), 0);
         }
 
@@ -101,32 +97,32 @@ public class KnefRaindrop extends ThrowableProjectile
         if(pResult.getEntity() instanceof LivingEntity living) {
             if (this.getOwner() != null && pResult.getEntity().equals(this.getOwner())) {
                 living.heal(living.getMaxHealth() * getHeal());
-                if(!getBow().isEmpty()) LevelingUtils.addExperience(getBow(), Math.round(Math.min(living.getMaxHealth() * getHeal(), living.getMaxHealth() - living.getHealth())));
+                if(getBow().getItem() instanceof IRelicItem relic) relic.dropAllocableExperience(this.level(), pResult.getLocation(), getBow(), Math.round(Math.min(living.getMaxHealth() * getHeal(), living.getMaxHealth() - living.getHealth())));
             } else {
-                pResult.getEntity().hurt(DamageSource.thrown(this, this.getOwner()), getDmg());
+                pResult.getEntity().hurt(level().damageSources().thrown(this, this.getOwner()), getDmg());
                 pResult.getEntity().invulnerableTime = 0;
             }
 
-            this.getLevel().playSound(null, pResult.getEntity(), SoundsRegistry.KNEF_BOW_SPLASH.get(), SoundSource.PLAYERS, random.nextFloat() * 0.2f + 0.1f, random.nextFloat() * 0.6f + 0.7f);
+            this.level().playSound(null, pResult.getEntity(), SoundsRegistry.KNEF_BOW_SPLASH.get(), SoundSource.PLAYERS, random.nextFloat() * 0.2f + 0.1f, random.nextFloat() * 0.6f + 0.7f);
         }
     }
 
 
     @Override
     protected void onHitBlock(BlockHitResult pResult) {
-        HitResult result = this.level.clip(new ClipContext(this.position(), this.position().add(0, -5, 0),
+        HitResult result = this.level().clip(new ClipContext(this.position(), this.position().add(0, -5, 0),
                 ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
 
         Vec3 loc = pResult.getLocation();
-        this.getLevel().playSound(null, loc.x, loc.y, loc.z, SoundsRegistry.KNEF_BOW_SPLASH.get(), SoundSource.PLAYERS, random.nextFloat() * 0.2f + 0.1f, random.nextFloat() * 0.6f + 0.7f);
+        this.level().playSound(null, loc.x, loc.y, loc.z, SoundsRegistry.KNEF_BOW_SPLASH.get(), SoundSource.PLAYERS, random.nextFloat() * 0.2f + 0.1f, random.nextFloat() * 0.6f + 0.7f);
 
         if (result.getType() == HitResult.Type.BLOCK) {
-            ParticleHelper.spawnParticleLine(this.level, new CircleTintData(color, 0.1f, 80, 0.9f, false),
+            ParticleHelper.spawnParticleLine(this.level(), ParticleUtils.constructSimpleSpark(color, 0.1f, 80, 0.9f),
                     this.position(), result.getLocation(), (int) Math.round(Math.sqrt(this.position().distanceToSqr(result.getLocation())) * this.tickCount * this.tickCount / 156 + 2), 0);
 
-            ParticleHelper.spawnParticleAABB(this.level, new CircleTintData(new Color(72, 0, 255), 0.2f, 20, 0.65f, false),
+            ParticleHelper.spawnParticleAABB(this.level(), ParticleUtils.constructSimpleSpark(new Color(72, 0, 255), 0.2f, 20, 0.65f),
                     new AABB(result.getLocation(), result.getLocation()), 15, 0.1);
-            ParticleHelper.spawnParticleAABB(this.level, new CircleTintData(new Color(0, 60, 255), 0.2f, 20, 0.65f, false),
+            ParticleHelper.spawnParticleAABB(this.level(), ParticleUtils.constructSimpleSpark(new Color(0, 60, 255), 0.2f, 20, 0.65f),
                     new AABB(result.getLocation(), result.getLocation()), 15, 0.1);
         }
         this.discard();

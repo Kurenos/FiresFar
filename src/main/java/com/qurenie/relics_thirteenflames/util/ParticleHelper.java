@@ -1,13 +1,17 @@
 package com.qurenie.relics_thirteenflames.util;
 
+import com.qurenie.relics_thirteenflames.mixins.ParticleAccessor;
+import com.qurenie.relics_thirteenflames.net.PacketEnginedParticle;
 import com.qurenie.relics_thirteenflames.net.PacketSpawnParticle;
-import it.hurts.sskirillss.relics.client.particles.circle.CircleTintData;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.zeith.hammerlib.net.Network;
 
 import java.awt.*;
@@ -93,7 +97,48 @@ public class ParticleHelper {
         }
     }
 
+    public static void spawnEnginedParticle(Level level, ParticleOptions options, Vec3 pos, double moveX, double moveY, double moveZ, float scale, int lifetime, Color color, float alpha) {
+        if(level.isClientSide()){
+            useParticleEngine(level, options, pos, moveX, moveY, moveZ, scale, lifetime, color, alpha);
+        }
+        else {
+            Network.sendToAll(new PacketEnginedParticle(options, pos.x, pos.y, pos.z,
+                    moveX, moveY, moveZ,
+                    scale, lifetime,
+                    color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f,
+                    alpha)
+            );
+        }
+    }
 
+    @OnlyIn(Dist.CLIENT)
+    private static void useParticleEngine(Level level, ParticleOptions options, Vec3 pos, double moveX, double moveY, double moveZ, float scale, int lifetime, Color color, float alpha){
+        Particle particle = Minecraft.getInstance().particleEngine
+                .createParticle(options,
+                        pos.x, pos.y, pos.z, moveX, moveY, moveZ);
+        if(particle != null) {
+            particle.scale(scale);
+            particle.setLifetime(lifetime);
+            particle.setColor(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f);
+            ((ParticleAccessor)particle).setAlpha(alpha);
+        }
+    }
+
+    public static void spawnEnginedParticle(Level level, ParticleOptions options, double x, double y, double z, double moveX, double moveY, double moveZ, float scale, int lifetime, Color color, float alpha) {
+        spawnEnginedParticle(level, options, new Vec3(x, y, z), moveX, moveY, moveZ, scale, lifetime, color, alpha);
+    }
+
+    public static void spawnEnginedParticles(Level level, ParticleOptions options, double x, double y, double z, int count, double dx, double dy, double dz, double maxSpeed, float scale, int lifetime, Color color, float alpha) {
+        for (int i = 0; i < count; ++i) {
+            double d1 = level.random.nextGaussian() * dx;
+            double d3 = level.random.nextGaussian() * dy;
+            double d5 = level.random.nextGaussian() * dz;
+            double d6 = level.random.nextGaussian() * maxSpeed;
+            double d7 = level.random.nextGaussian() * maxSpeed;
+            double d8 = level.random.nextGaussian() * maxSpeed;
+            spawnEnginedParticle(level, options, x + d1, y + d3, z + d5, d6, d7, d8, scale, lifetime, color, alpha);
+        }
+    }
 
 
 

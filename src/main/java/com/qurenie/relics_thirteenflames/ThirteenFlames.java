@@ -1,27 +1,20 @@
 package com.qurenie.relics_thirteenflames;
 
-import com.mojang.logging.LogUtils;
-import com.qurenie.relics_thirteenflames.init.EntityRegistry;
 import com.qurenie.relics_thirteenflames.init.ItemsRegistry;
 import com.qurenie.relics_thirteenflames.init.SoundsRegistry;
-import net.minecraft.client.renderer.item.ItemProperties;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.*;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,12 +27,11 @@ public class ThirteenFlames
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogManager.getLogger("ThirteenFlames");
 
-    public static final CreativeModeTab ITEM_TAB = new CreativeModeTab("relics_thirteenflames") {
-        @Override
-        public ItemStack makeIcon() {
-            return Items.FIRE_CORAL.getDefaultInstance();
-        }
-    };
+    public static final CreativeModeTab ITEM_TAB = CreativeModeTab.builder()
+            .icon(ItemsRegistry.KNEF_BOW::getDefaultInstance)
+            .title(Component.translatable("itemGroup.relics_thirteenflames"))
+            .build()
+    ;
     public ThirteenFlames()
     {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -58,11 +50,13 @@ public class ThirteenFlames
 
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
-    @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event)
-    {
 
+    @SubscribeEvent
+    public void onCreativeTabBuild(BuildCreativeModeTabContentsEvent event)
+    {
+        event.accept(ItemsRegistry.KNEF_BOW);
+        event.accept(ItemsRegistry.RONAS_SWORD);
+        event.accept(ItemsRegistry.MONTU_HAMMER);
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent

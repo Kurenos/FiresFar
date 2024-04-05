@@ -37,5 +37,13 @@
         "stream": true
       }
     ]
+  },
+  "montu_slap": {
+    "sounds": [
+      {
+        "name": "relics_thirteenflames:montu_slap",
+        "attenuation_distance": 100
+      }
+    ]
   }
 }

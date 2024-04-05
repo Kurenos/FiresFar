@@ -1,29 +1,25 @@
 package com.qurenie.relics_thirteenflames.content.entities;
 
+import com.qurenie.relics_thirteenflames.content.items.ItemKnefBow;
 import com.qurenie.relics_thirteenflames.init.EntityRegistry;
 import com.qurenie.relics_thirteenflames.init.ItemsRegistry;
 import com.qurenie.relics_thirteenflames.init.SoundsRegistry;
 import com.qurenie.relics_thirteenflames.util.ParticleHelper;
-import it.hurts.sskirillss.relics.client.particles.circle.CircleTintData;
-import it.hurts.sskirillss.relics.items.relics.base.utils.AbilityUtils;
+import it.hurts.sskirillss.relics.items.relics.base.IRelicItem;
 import it.hurts.sskirillss.relics.utils.MathUtils;
-import net.minecraft.client.player.LocalPlayer;
+import it.hurts.sskirillss.relics.utils.ParticleUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrowableProjectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -33,6 +29,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class KnefStormcaller extends ThrowableProjectile
 {
@@ -49,13 +46,22 @@ public class KnefStormcaller extends ThrowableProjectile
         return this.getEntityData().get(BOW);
     }
 
+    private static final EntityDataAccessor<String> OWNER_UUID = SynchedEntityData.defineId(KnefStormcaller.class, EntityDataSerializers.STRING);
+
+    public void setOwnerUUID(String uuid){
+        this.getEntityData().set(OWNER_UUID, uuid);
+    }
+
+    public String getOwnerUUID() {
+        return this.getEntityData().get(OWNER_UUID);
+    }
+
     public List<KnefProjectileSpecial> rays = new ArrayList<>();
 
     public double rad = 0.05;
 
-    public KnefStormcaller setRays(List<KnefProjectileSpecial> rays){
+    public void setRays(List<KnefProjectileSpecial> rays){
         this.rays = rays;
-        return this;
     }
 
     public Vec3 prevPos1, prevPos2, prevPos3, prevPos4, pos1, pos2, pos3, pos4, shotPos;
@@ -105,7 +111,7 @@ public class KnefStormcaller extends ThrowableProjectile
         pos4 = this.position().add(new Vec3(MathUtils.randomFloat(random) * 0.15, MathUtils.randomFloat(random) * 0.15, MathUtils.randomFloat(random) * 0.15));
         pos3 = this.position();
 
-        if(this.tickCount % 2 == 0 && !this.level.isClientSide) {
+        if(this.tickCount % 2 == 0 && !this.level().isClientSide) {
 
 //            ParticleHelper.spawnParticleLine(this.level, new CircleTintData(new Color(201, 75, 255), 0.25f, 100, 0.94f, false),
 //                    prevPos1 == null ? shotPos : prevPos1,
@@ -119,7 +125,7 @@ public class KnefStormcaller extends ThrowableProjectile
 //                    prevPos4 == null ? shotPos : prevPos4,
 //                    pos4,
 //                    25, 0);
-            ParticleHelper.spawnParticleLine(this.level, new CircleTintData(new Color(0, 34, 255), 0.3f, 40, 0.91f, false),
+            ParticleHelper.spawnParticleLine(this.level(), ParticleUtils.constructSimpleSpark(new Color(0, 34, 255), 0.3f, 40, 0.91f),
                     prevPos3 == null ? shotPos : prevPos3,
                     pos3,
                     25, 0);
@@ -134,14 +140,14 @@ public class KnefStormcaller extends ThrowableProjectile
         if(this.getY() > this.shotPos.y + 90){
 
             //-------------------------GRAPHENE----------------------------//
-            if(!this.level.isClientSide()) {
+            if(!this.level().isClientSide()) {
                 for (int i = 0; i < 120; i++) {
                     Vec3 direction = new Vec3(1,0,0);
                     direction = direction.yRot((float) Math.toRadians(random.nextFloat() * 360f)).scale(random.nextFloat() * 0.8f);
-                    ParticleHelper.spawnDirectedParticle(this.level, new CircleTintData(new Color(0, 15, 49), 4.2f, 80, 0.95f, false),
+                    ParticleHelper.spawnDirectedParticle(this.level(), ParticleUtils.constructSimpleSpark(new Color(0, 15, 49), 4.2f, 80, 0.95f),
                             this.getX(), this.getY(), this.getZ(), direction.x, MathUtils.randomFloat(random) * 0.1, direction.z);
                     direction = direction.yRot((float) Math.toRadians(random.nextFloat() * 360f)).normalize().scale(random.nextFloat() * 0.8f);
-                    ParticleHelper.spawnDirectedParticle(this.level, new CircleTintData(new Color(28, 0, 27), 4.2f, 80, 0.95f, false),
+                    ParticleHelper.spawnDirectedParticle(this.level(), ParticleUtils.constructSimpleSpark(new Color(28, 0, 27), 4.2f, 80, 0.95f),
                             this.getX(), this.getY(), this.getZ(), direction.x, MathUtils.randomFloat(random) * 0.1, direction.z);
 //                    this.level.addParticle(new CircleTintData(new Color(0, 24, 80), 4.2f, 130, 0.95f, false),
 //                            this.getX(), this.getY(), this.getZ(), MathUtils.randomFloat(random), MathUtils.randomFloat(random) * 0.1, MathUtils.randomFloat(random));
@@ -154,20 +160,25 @@ public class KnefStormcaller extends ThrowableProjectile
 
 
 
-            if(this.getBow().is(ItemsRegistry.KNEF_BOW) && this.getOwner() instanceof Player player) {
-                KnefStormEntity storm = new KnefStormEntity(EntityRegistry.KNEF_STORM, this.getLevel());
-                storm.setPos(this.getPosition(1F));
-                storm.setRadius((float) AbilityUtils.getAbilityValue(getBow(),"storm", "radius"));
-                storm.setLifeTime((int) (AbilityUtils.getAbilityValue(getBow(),"storm", "dur") * 20));
-                storm.setOwner(player);
-                storm.setFreq( (int)Math.round(4 - AbilityUtils.getAbilityPoints(getBow(), "storm") * 0.6));
-                storm.setBow(getBow());
-                storm.setDmg((float) AbilityUtils.getAbilityValue(getBow(),"storm", "dmg") + getBow().getEnchantmentLevel(Enchantments.POWER_ARROWS) / 2.5f);
-                storm.setHeal((float) AbilityUtils.getAbilityValue(getBow(),"storm", "heal") / 100);
-                this.getLevel().addFreshEntity(storm);
-                if(!this.getLevel().isClientSide()) this.getLevel().playSound(null, this.getOwner(),
-                        AbilityUtils.getAbilityValue(getBow(),"storm", "radius") > 5 ? SoundsRegistry.KNEF_BOW_STORM.get() : SoundsRegistry.KNEF_BOW_STORM_SHORT.get(),
-                        SoundSource.PLAYERS, random.nextFloat() * 0.6f + 1f, random.nextFloat() * 0.2f + 0.8f);
+            if(!this.level().isClientSide() && this.getBow().getItem() instanceof ItemKnefBow relic && !this.getOwnerUUID().isEmpty()) {
+                Entity owner = ((ServerLevel) this.level()).getEntity(UUID.fromString(this.getOwnerUUID()));
+
+                if(owner != null) {
+                    KnefStormEntity storm = new KnefStormEntity(EntityRegistry.KNEF_STORM, this.level());
+                    storm.setPos(this.getPosition(1F));
+                    storm.setRadius((float) relic.getAbilityValue(getBow(), "storm", "radius"));
+                    storm.setLifeTime((int) (relic.getAbilityValue(getBow(), "storm", "dur") * 20));
+                    storm.setOwner(owner);
+                    storm.setOwnerUUID(owner.getStringUUID());
+                    storm.setFreq((int) Math.round(4 - relic.getAbilityPoints(getBow(), "storm") * 0.6));
+                    storm.setBow(getBow());
+                    storm.setDmg((float) relic.getAbilityValue(getBow(), "storm", "dmg") + getBow().getEnchantmentLevel(Enchantments.POWER_ARROWS) / 2.5f);
+                    storm.setHeal((float) relic.getAbilityValue(getBow(), "storm", "heal") / 100);
+                    this.level().addFreshEntity(storm);
+                    this.level().playSound(null, owner,
+                            relic.getAbilityValue(getBow(), "storm", "radius") > 5 ? SoundsRegistry.KNEF_BOW_STORM.get() : SoundsRegistry.KNEF_BOW_STORM_SHORT.get(),
+                            SoundSource.PLAYERS, random.nextFloat() * 0.6f + 1f, random.nextFloat() * 0.2f + 0.8f);
+                }
             }
             this.discard();
 
@@ -180,16 +191,21 @@ public class KnefStormcaller extends ThrowableProjectile
 
     @Override
     protected void onHitBlock(BlockHitResult pResult) {
-
-        KnefDischarge discharge = new KnefDischarge(EntityRegistry.KNEF_DISCHARGE, this.level);
-        Vec3 pos = this.position();
-        discharge.setPos(pos);
-        discharge.setOwner(this.getOwner());
-        discharge.shotPos = pos;
-        discharge.setRadius((float) (AbilityUtils.getAbilityValue(getBow(),"storm", "radius") * 0.8f));
-        discharge.setDmg((float) (AbilityUtils.getAbilityValue(getBow(),"storm", "dmg") + getBow().getEnchantmentLevel(Enchantments.POWER_ARROWS) / 2.5f) * 6);
-        discharge.shootFromRotation(this, 0, -90, 0.0f, 0.0f, 0);
-        this.level.addFreshEntity(discharge);
+        if(!this.level().isClientSide()) {
+            Entity owner = ((ServerLevel) this.level()).getEntity(UUID.fromString(this.getOwnerUUID()));
+            if(owner != null && this.getBow().getItem() instanceof IRelicItem relic) {
+                KnefDischarge discharge = new KnefDischarge(EntityRegistry.KNEF_DISCHARGE, this.level());
+                Vec3 pos = this.position();
+                discharge.setPos(pos);
+                discharge.setOwner(owner);
+                discharge.setOwnerUUID(this.getOwnerUUID());
+                discharge.shotPos = pos;
+                discharge.setRadius((float) (relic.getAbilityValue(getBow(), "storm", "radius") * 0.8f));
+                discharge.setDmg((float) (relic.getAbilityValue(getBow(), "storm", "dmg") + getBow().getEnchantmentLevel(Enchantments.POWER_ARROWS) / 2.5f) * 6);
+                discharge.shootFromRotation(this, 0, -90, 0.0f, 0.0f, 0);
+                this.level().addFreshEntity(discharge);
+            }
+        }
 
         this.discard();
     }
@@ -203,17 +219,21 @@ public class KnefStormcaller extends ThrowableProjectile
 
     @Override
     protected void onHitEntity(EntityHitResult result) {
-        this.setPos(result.getEntity().getBoundingBox().getCenter());
-        if(!this.level.isClientSide()) {
-            KnefDischarge discharge = new KnefDischarge(EntityRegistry.KNEF_DISCHARGE, this.level);
-            Vec3 pos = result.getEntity().getBoundingBox().getCenter();
-            discharge.setPos(pos);
-            discharge.setOwner(this.getOwner());
-            discharge.shotPos = pos;
-            discharge.setRadius((float) (AbilityUtils.getAbilityValue(getBow(),"storm", "radius") * 0.8f));
-            discharge.setDmg((float) (AbilityUtils.getAbilityValue(getBow(),"storm", "dmg") + getBow().getEnchantmentLevel(Enchantments.POWER_ARROWS) / 2.5f) * 6);
-            discharge.shootFromRotation(this, 0, -90, 0.0f, 0.0f, 0);
-            this.level.addFreshEntity(discharge);
+        if(!this.level().isClientSide()) {
+            Entity owner = ((ServerLevel) this.level()).getEntity(UUID.fromString(this.getOwnerUUID()));
+            if (owner != null && this.getBow().getItem() instanceof IRelicItem relic) {
+                this.setPos(result.getEntity().getBoundingBox().getCenter());
+                KnefDischarge discharge = new KnefDischarge(EntityRegistry.KNEF_DISCHARGE, this.level());
+                Vec3 pos = result.getEntity().getBoundingBox().getCenter();
+                discharge.setPos(pos);
+                discharge.setOwner(owner);
+                discharge.setOwnerUUID(this.getOwnerUUID());
+                discharge.shotPos = pos;
+                discharge.setRadius((float) (relic.getAbilityValue(getBow(), "storm", "radius") * 0.8f));
+                discharge.setDmg((float) (relic.getAbilityValue(getBow(), "storm", "dmg") + getBow().getEnchantmentLevel(Enchantments.POWER_ARROWS) / 2.5f) * 6);
+                discharge.shootFromRotation(this, 0, -90, 0.0f, 0.0f, 0);
+                this.level().addFreshEntity(discharge);
+            }
         }
         this.discard();
     }
@@ -230,26 +250,29 @@ public class KnefStormcaller extends ThrowableProjectile
         }
     }
 
-    @Override
-    public boolean canCollideWith(Entity pEntity) {
-        return (pEntity instanceof LivingEntity && pEntity.equals(this.getOwner()));
-    }
+//    @Override
+//    public boolean canCollideWith(Entity pEntity) {
+//        return (pEntity instanceof LivingEntity && pEntity.equals(this.getOwner()));
+//    }
 
     @Override
     protected void defineSynchedData() {
         this.entityData.define(BOW, ItemStack.EMPTY);
+        this.entityData.define(OWNER_UUID, "owneruuid");
     }
 
     @Override
     protected void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
         setBow(ItemStack.of(compound.getCompound("bow")));
+        setOwnerUUID(compound.getString("owneruuid"));
     }
 
     @Override
     protected void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
         compound.put("bow", getBow().save(new CompoundTag()));
+        compound.putString("owneruuid", getOwnerUUID());
     }
 
 }

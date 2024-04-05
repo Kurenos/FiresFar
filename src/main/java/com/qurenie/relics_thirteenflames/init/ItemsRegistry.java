@@ -1,42 +1,32 @@
 package com.qurenie.relics_thirteenflames.init;
 
 import com.qurenie.relics_thirteenflames.ThirteenFlames;
-import com.qurenie.relics_thirteenflames.content.entities.KnefProjectile;
 import com.qurenie.relics_thirteenflames.content.items.ItemKnefBow;
-import it.hurts.sskirillss.relics.items.SolidSnowballItem;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityType.Builder;
-import net.minecraft.world.entity.MobCategory;
+import com.qurenie.relics_thirteenflames.content.items.ItemMontuHammer;
+import com.qurenie.relics_thirteenflames.content.items.ItemRonasSword;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.minecraft.world.item.Tiers;
 import org.zeith.hammerlib.annotations.RegistryName;
 import org.zeith.hammerlib.annotations.SimplyRegister;
 
-@SimplyRegister
+import java.util.Set;
+
+@SimplyRegister(creativeTabs = "")
 public interface ItemsRegistry {
-//    private static final DeferredRegister<Item> ITEMS;
-//    public static final RegistryObject<Item> KNEF_BOW;
 
     @RegistryName("knef_bow")
     ItemKnefBow KNEF_BOW = new ItemKnefBow(props().rarity(Rarity.RARE).stacksTo(1));
 
+    @RegistryName("ronas_sword")
+    ItemRonasSword RONAS_SWORD = new ItemRonasSword(props().rarity(Rarity.RARE).stacksTo(1));
 
-//    public static void registerItems() {
-//        ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
-//    }
-//
-//    static {
-//        ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "relics_thirteenflames");
-//
-//        KNEF_BOW = ITEMS.register("knef_bow", () -> new ItemKnefBow(props().rarity(Rarity.RARE)));
-//    }
+    @RegistryName("montu_hammer")
+    ItemMontuHammer MONTU_HAMMER = new ItemMontuHammer(props().rarity(Rarity.RARE).stacksTo(1), Tiers.NETHERITE);
+
 
     static Item.Properties props()
     {
-        return new Item.Properties().tab(ThirteenFlames.ITEM_TAB);
+        return new Item.Properties();
     }
 }
